@@ -6,9 +6,9 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import AllChem
 from rdkit.Chem import Descriptors
-from padelpy import from_smiles
+#from padelpy import from_smiles
 import numpy as np
-import pickle
+#import pickle
 import joblib
 
 st.title("Predictor de docking score de ligando-receptor por ML")
@@ -24,11 +24,8 @@ RDKit_select_descriptors = joblib.load('./archivos/RDKit_select_descriptors.pick
 PaDEL_select_descriptors = joblib.load('./archivos/PaDEL_select_descriptors.pickle')
 robust_scaler = joblib.load('./archivos/robust_scaler.pickle')
 minmax_scaler = joblib.load('./archivos/minmax_scaler.pickle')
-selector_lgbm = joblib.load('./archivos/selector_LGBM.pickle')
-lgbm_model = joblib.load('./archivos/lgbm_best_model.pickle')
-#selector_lgbm = joblib.load('./archivos/selector_LGBM.joblib')
-#lgbm_model = joblib.load('./archivos/lgbm_best_model.joblib')
-
+#selector_lgbm = joblib.load('./archivos/selector_LGBM.pickle')
+#lgbm_model = joblib.load('./archivos/lgbm_best_model.pickle')
 
 # RDKit selected descriptors function
 def get_selected_RDKitdescriptors(smile, selected_descriptors, missingVal=None):
@@ -56,30 +53,3 @@ RDKit_descriptors = [get_selected_RDKitdescriptors(m, RDKit_select_descriptors) 
 RDKit_df = pd.DataFrame(RDKit_descriptors)
 st.write("Descriptores RDKit")
 st.dataframe(RDKit_df)
-
-# Calculate PaDEL descriptors
-PaDEL_descriptors = from_smiles(df['smiles'].tolist())
-PaDEL_df_ = pd.DataFrame(PaDEL_descriptors)
-PaDEL_df = PaDEL_df_.loc[:,PaDEL_select_descriptors]
-st.write("Descriptores PaDEL")
-st.dataframe(PaDEL_df)
-
-# Concatenate RDKit and PaDEL dataframes
-RDKit_PaDEL_df = pd.concat([RDKit_df, PaDEL_df], axis=1)
-RDKit_PaDEL_df_columns = RDKit_PaDEL_df.columns
-
-# Scale data
-RDKit_PaDEL_scaled_ = robust_scaler.transform(RDKit_PaDEL_df)
-RDKit_PaDEL_scaled = minmax_scaler.transform(RDKit_PaDEL_scaled_)
-RDKit_PaDEL_scaled_df = pd.DataFrame(RDKit_PaDEL_scaled)
-RDKit_PaDEL_scaled_df.columns = RDKit_PaDEL_df_columns
-
-# Selected features
-selected_features_mask = selector_lgbm.support_
-Selected_features = RDKit_PaDEL_df_columns[selected_features_mask]
-RDKit_PaDEL = RDKit_PaDEL_scaled_df[Selected_features]
-
-# Make predictions
-predictions = lgbm_model.predict(RDKit_PaDEL)
-st.write("Predicción de Docking score")
-st.dataframe(predictions)
