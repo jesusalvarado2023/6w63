@@ -1,2 +1,2 @@
 libxrender1
-default-jre-headless
+#default-jre-headless
